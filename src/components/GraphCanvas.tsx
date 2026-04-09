@@ -246,19 +246,15 @@ export default function GraphCanvas({ equations, view, onViewChange, theme, show
   };
   const reset = () => onViewChange({ cx: 0, cy: 0, scale: 80 });
 
-  const btnStyle: React.CSSProperties = {
-    width: 32, height: 32,
-    background: theme.surface,
-    border: `1px solid ${theme.border}`,
-    color: theme.text,
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontSize: 16,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    userSelect: 'none',
-  };
+  const glass = theme.isDark
+    ? { bg: 'rgba(15,15,25,0.55)', border: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.75)' }
+    : { bg: 'rgba(255,255,255,0.7)', border: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.6)' };
+
+  const zoomBtns = [
+    { label: '+', title: 'Zoom in', action: () => zoom(1.4) },
+    { label: '⊙', title: 'Reset view', action: reset },
+    { label: '−', title: 'Zoom out', action: () => zoom(1 / 1.4) },
+  ];
 
   return (
     <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
@@ -271,29 +267,88 @@ export default function GraphCanvas({ equations, view, onViewChange, theme, show
         onMouseLeave={handleMouseLeave}
       />
 
-      {/* Zoom controls */}
-      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <button style={btnStyle} onClick={() => zoom(1.4)} title="Zoom in">+</button>
-        <button style={btnStyle} onClick={reset} title="Reset view">⊙</button>
-        <button style={btnStyle} onClick={() => zoom(1 / 1.4)} title="Zoom out">−</button>
+      {/* Zoom controls — glass panel */}
+      <div style={{
+        position: 'absolute', top: 16, right: 16,
+        display: 'flex', flexDirection: 'column',
+        borderRadius: 11,
+        overflow: 'hidden',
+        border: `1px solid ${glass.border}`,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        background: glass.bg,
+        boxShadow: theme.isDark
+          ? '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)'
+          : '0 4px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)',
+      }}>
+        {zoomBtns.map((btn, i) => (
+          <ZoomButton
+            key={btn.label}
+            label={btn.label}
+            title={btn.title}
+            onClick={btn.action}
+            divider={i < zoomBtns.length - 1}
+            glass={glass}
+          />
+        ))}
       </div>
 
       {/* Coord display */}
       {mouseCoords && (
         <div style={{
-          position: 'absolute', bottom: 10, right: 12,
-          background: theme.surface + 'dd',
-          border: `1px solid ${theme.border}`,
-          borderRadius: 6,
-          padding: '3px 8px',
-          color: theme.subtext,
-          fontSize: 12,
-          fontFamily: 'monospace',
+          position: 'absolute', bottom: 14, right: 16,
+          background: glass.bg,
+          border: `1px solid ${glass.border}`,
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderRadius: 7,
+          padding: '4px 10px',
+          color: glass.color,
+          fontSize: 11,
+          fontFamily: "'JetBrains Mono', monospace",
           pointerEvents: 'none',
+          letterSpacing: 0.2,
         }}>
           x: {mouseCoords.x.toFixed(3)}&nbsp;&nbsp;y: {mouseCoords.y.toFixed(3)}
         </div>
       )}
     </div>
+  );
+}
+
+interface ZoomBtnProps {
+  label: string;
+  title: string;
+  onClick: () => void;
+  divider: boolean;
+  glass: { bg: string; border: string; color: string };
+}
+
+function ZoomButton({ label, title, onClick, divider, glass }: ZoomBtnProps) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: 36, height: 36,
+        background: hov ? 'rgba(128,128,128,0.2)' : 'transparent',
+        border: 'none',
+        borderBottom: divider ? `1px solid ${glass.border}` : 'none',
+        color: hov ? (glass.color.includes('255') ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.8)') : glass.color,
+        cursor: 'pointer',
+        fontSize: label === '⊙' ? 15 : 18,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background 0.12s, color 0.12s',
+        userSelect: 'none',
+        fontWeight: 300,
+      }}
+    >
+      {label}
+    </button>
   );
 }

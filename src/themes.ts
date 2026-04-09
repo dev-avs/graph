@@ -13,6 +13,8 @@ export interface ThemeVars {
   axis: string;
   canvasBg: string;
   label: string;
+  accent: string;
+  isDark: boolean;
 }
 
 export const THEMES: Record<ThemeId, ThemeVars> = {
@@ -29,6 +31,8 @@ export const THEMES: Record<ThemeId, ThemeVars> = {
     axis: 'rgba(166,173,200,0.8)',
     canvasBg: '#181825',
     label: '#cdd6f4',
+    accent: '#89b4fa',
+    isDark: true,
   },
   latte: {
     name: 'Catppuccin Latte',
@@ -43,6 +47,8 @@ export const THEMES: Record<ThemeId, ThemeVars> = {
     axis: 'rgba(76,79,105,0.8)',
     canvasBg: '#dce0e8',
     label: '#4c4f69',
+    accent: '#1e66f5',
+    isDark: false,
   },
   nord: {
     name: 'Nord',
@@ -57,6 +63,8 @@ export const THEMES: Record<ThemeId, ThemeVars> = {
     axis: 'rgba(216,222,233,0.7)',
     canvasBg: '#242933',
     label: '#eceff4',
+    accent: '#88c0d0',
+    isDark: true,
   },
   dracula: {
     name: 'Dracula',
@@ -71,5 +79,7 @@ export const THEMES: Record<ThemeId, ThemeVars> = {
     axis: 'rgba(248,248,242,0.7)',
     canvasBg: '#21222c',
     label: '#f8f8f2',
+    accent: '#bd93f9',
+    isDark: true,
   },
 };
