@@ -3,6 +3,7 @@ import { Equation, ThemeId } from '../types';
 import { ThemeVars } from '../themes';
 import EquationItem from './EquationItem';
 import Settings from './Settings';
+import TableView from './TableView';
 
 interface Props {
   equations: Equation[];
@@ -19,7 +20,7 @@ interface Props {
   lastAddedId: number | null;
 }
 
-type Tab = 'equations' | 'settings';
+type Tab = 'equations' | 'table' | 'settings';
 
 const GraphLogo = ({ accent }: { accent: string }) => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -47,6 +48,14 @@ const FnIcon = () => (
     <path d="M3 13 C3 13 4 10 4 8 C4 6 3 3 3 3" />
     <path d="M3 8 L6 8" />
     <path d="M9 6 C9 4.5 10 4 11 4 C12.5 4 13 5 13 6.5 C13 9 11 10 9 12 L13.5 12" />
+  </svg>
+);
+
+const TableIcon = () => (
+  <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1.5" y="2.5" width="13" height="11" rx="2" />
+    <line x1="1.5" y1="6" x2="14.5" y2="6" />
+    <line x1="6" y1="6" x2="6" y2="13.5" />
   </svg>
 );
 
@@ -103,8 +112,9 @@ export default function Sidebar({
           border: `1px solid ${theme.border}`,
         }}>
           {([
-            { id: 'equations' as Tab, Icon: FnIcon, label: 'Functions' },
-            { id: 'settings' as Tab, Icon: GearIcon, label: 'Settings' },
+            { id: 'equations' as Tab, Icon: FnIcon,    label: 'Functions' },
+            { id: 'table'     as Tab, Icon: TableIcon, label: 'Table' },
+            { id: 'settings'  as Tab, Icon: GearIcon,  label: 'Settings' },
           ]).map(({ id, Icon, label }) => (
             <button
               key={id}
@@ -174,6 +184,8 @@ export default function Sidebar({
             <AddButton theme={theme} onClick={onAddEquation} />
           </div>
         </>
+      ) : tab === 'table' ? (
+        <TableView equations={equations} theme={theme} />
       ) : (
         <Settings
           theme={theme}
