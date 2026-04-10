@@ -54,9 +54,9 @@ function fmtY(n: number | null): string {
 }
 
 export default function TableView({ equations, theme }: Props) {
-  const [startX, setStartX] = useState(-5);
+  const [startX, setStartX] = useState(0);
   const [step, setStep]     = useState(1);
-  const [count]             = useState(21);
+  const count               = 10;
   const [keyOnly, setKeyOnly] = useState(false);
 
   const visEqs = equations.filter(eq => eq.visible && eq.fn);
@@ -154,41 +154,48 @@ export default function TableView({ equations, theme }: Props) {
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
-            fontSize: 12,
-            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 14,
+            fontWeight: 500,
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            color: theme.text,
           }}>
             <thead>
               <tr style={{ background: theme.surface, position: 'sticky', top: 0, zIndex: 1 }}>
                 <th style={{
-                  padding: '7px 10px 7px 14px',
-                  textAlign: 'right',
-                  color: theme.subtext,
-                  fontWeight: 600,
-                  fontSize: 11,
-                  borderBottom: `2px solid ${theme.border}`,
-                  letterSpacing: 0.3,
+                  padding: '12px 10px',
+                  textAlign: 'center',
+                  borderBottom: `1px solid ${theme.border}`,
+                  borderRight: `2px solid ${theme.border}`,
                 }}>
-                  x
+                  <div style={{ fontStyle: 'italic', fontFamily: "'Times New Roman', serif", fontSize: 16 }}>
+                    x<sub style={{ fontSize: 10 }}>1</sub>
+                  </div>
                 </th>
-                {visEqs.map(eq => (
+                {visEqs.map((eq, i) => (
                   <th key={eq.id} style={{
-                    padding: '7px 10px',
-                    textAlign: 'right',
-                    borderBottom: `2px solid ${theme.border}`,
-                    borderLeft: `1px solid ${theme.border}`,
+                    padding: '12px 10px',
+                    textAlign: 'center',
+                    borderBottom: `1px solid ${theme.border}`,
+                    borderRight: i < visEqs.length - 1 ? `1px solid ${theme.border}` : 'none',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-                      <span style={{
-                        color: theme.text, fontWeight: 500, fontSize: 11,
-                        maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {eq.expr || 'f(x)'}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      {/* Desmos-style 5-dot circle indicator */}
                       <div style={{
-                        width: 9, height: 9, borderRadius: '50%',
-                        background: eq.color, flexShrink: 0,
-                        boxShadow: `0 0 4px ${eq.color}88`,
-                      }} />
+                        width: 22, height: 22, borderRadius: '50%',
+                        background: eq.color, position: 'relative',
+                        boxShadow: `0 0 4px ${eq.color}40`,
+                      }}>
+                        <div style={{ position: 'absolute', top: 4.5, left: 4.5, width: 3.5, height: 3.5, borderRadius: '50%', background: 'white' }} />
+                        <div style={{ position: 'absolute', top: 4.5, right: 4.5, width: 3.5, height: 3.5, borderRadius: '50%', background: 'white' }} />
+                        <div style={{ position: 'absolute', bottom: 4.5, left: 4.5, width: 3.5, height: 3.5, borderRadius: '50%', background: 'white' }} />
+                        <div style={{ position: 'absolute', bottom: 4.5, right: 4.5, width: 3.5, height: 3.5, borderRadius: '50%', background: 'white' }} />
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 3.5, height: 3.5, borderRadius: '50%', background: 'white' }} />
+                      </div>
+                      <div style={{
+                         fontStyle: 'italic', fontFamily: "'Times New Roman', serif", fontSize: 16, color: theme.text,
+                      }}>
+                         y<sub style={{ fontSize: 10 }}>{i + 1}</sub>
+                      </div>
                     </div>
                   </th>
                 ))}
@@ -199,91 +206,54 @@ export default function TableView({ equations, theme }: Props) {
                 <tr>
                   <td colSpan={visEqs.length + 1} style={{
                     padding: '24px 16px', textAlign: 'center',
-                    color: theme.overlay, fontSize: 12,
+                    color: theme.overlay, fontSize: 13,
                   }}>
                     No key rows in this range.<br />Try a different start or step.
                   </td>
                 </tr>
-              ) : displayRows.map((row, i) => {
-                const rowTag = row.tags.find(t => t !== null) ?? null;
-                const hc = rowTag ? TAG_COLOR[rowTag] : null;
-
-                return (
-                  <tr
-                    key={i}
-                    style={{
-                      background: hc
-                        ? hc + '14'
-                        : i % 2 === 0 ? 'transparent' : theme.surface + '50',
-                      borderLeft: `3px solid ${hc ?? 'transparent'}`,
-                      transition: 'background 0.1s',
-                    }}
-                  >
+              ) : displayRows.map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : theme.surface + '20' }}>
                     {/* x cell */}
                     <td style={{
-                      padding: '5px 10px 5px 11px',
-                      textAlign: 'right',
-                      color: hc ?? theme.subtext,
-                      fontWeight: hc ? 600 : 400,
-                      fontSize: 11,
-                      whiteSpace: 'nowrap',
+                      padding: '10px',
+                      textAlign: 'center',
+                      color: theme.text,
+                      borderRight: `2px solid ${theme.border}`,
+                      borderBottom: `1px solid ${theme.border}`,
                     }}>
                       {fmtX(row.x, step)}
                     </td>
 
                     {/* y cells */}
-                    {row.ys.map((y, ei) => {
-                      const tag = row.tags[ei];
-                      const tc = tag ? TAG_COLOR[tag] : null;
-                      return (
-                        <td key={ei} style={{
-                          padding: '5px 10px',
-                          textAlign: 'right',
-                          color: tc ?? (y === null ? theme.overlay : theme.text),
-                          fontWeight: tc ? 600 : 400,
-                          borderLeft: `1px solid ${theme.border}`,
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {fmtY(y)}
-                          {tag && (
-                            <span style={{
-                              marginLeft: 4, fontSize: 9,
-                              color: TAG_COLOR[tag],
-                              opacity: 0.8,
-                              fontWeight: 500,
-                            }}>
-                              {TAG_LABEL[tag]}
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
+                    {row.ys.map((y, ei) => (
+                      <td key={ei} style={{
+                        padding: '10px',
+                        textAlign: 'center',
+                        color: y === null ? theme.overlay : theme.text,
+                        borderRight: ei < row.ys.length - 1 ? `1px solid ${theme.border}` : 'none',
+                        borderBottom: `1px solid ${theme.border}`,
+                      }}>
+                        {fmtY(y)}
+                      </td>
+                    ))}
                   </tr>
-                );
-              })}
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* Legend */}
       <div style={{
-        padding: '7px 12px',
+        padding: '8px 12px',
         borderTop: `1px solid ${theme.border}`,
         display: 'flex',
-        gap: 14,
+        justifyContent: 'center',
         flexShrink: 0,
         background: theme.surface + '60',
+        fontSize: 11,
+        color: theme.overlay,
       }}>
-        {(Object.entries(TAG_COLOR) as [NonNullable<Tag>, string][]).map(([tag, color]) => (
-          <div key={tag} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 7, height: 7, borderRadius: 2, background: color, flexShrink: 0 }} />
-            <span style={{ fontSize: 10, color: theme.overlay, letterSpacing: 0.2 }}>{TAG_LABEL[tag]}</span>
-          </div>
-        ))}
-        <span style={{ marginLeft: 'auto', fontSize: 10, color: theme.overlay }}>
-          {rows.length} rows · Δx = {step}
-        </span>
+        10 rows · Showing x from {startX} to {startX + (10 - 1) * step}
       </div>
     </div>
   );

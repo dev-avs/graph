@@ -8,7 +8,7 @@ export function findKeyPoints(
   maxPoints = 15
 ): KeyPoint[] {
   const points: KeyPoint[] = [];
-  const STEPS = 400;
+  const STEPS = 300;
   const dx = (xMax - xMin) / STEPS;
   const h = 1e-5;
 
@@ -128,4 +128,70 @@ function fmt(n: number): string {
   if (abs >= 100) return n.toFixed(1);
   if (abs >= 10) return n.toFixed(2);
   return n.toFixed(3);
+}
+
+export function findIntersections(
+  fn1: (x: number) => number,
+  fn2: (x: number) => number,
+  color: string,
+  xMin: number,
+  xMax: number,
+  maxPoints = 15
+): KeyPoint[] {
+  const points: KeyPoint[] = [];
+  const STEPS = 160;
+  const dx = (xMax - xMin) / STEPS;
+
+  const diff = (x: number) => {
+    try {
+      const y1 = fn1(x), y2 = fn2(x);
+      return (isFinite(y1) && isFinite(y2)) ? y1 - y2 : null;
+    } catch { return null; }
+  };
+
+  const xs: number[] = [];
+  const dfs: (number | null)[] = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const x = xMin + i * dx;
+    xs.push(x);
+    dfs.push(diff(x));
+  }
+
+  const tol = (xMax - xMin) * 0.005;
+  const isDuplicate = (x: number, y: number): boolean =>
+    points.some(p => Math.abs(p.x - x) < tol && Math.abs(p.y - y) < tol * 10);
+
+  for (let i = 0; i < STEPS && points.length < maxPoints; i++) {
+    const d0 = dfs[i], d1 = dfs[i + 1];
+    if (d0 === null || d1 === null) continue;
+    
+    if (d0 * d1 < 0) {
+      const z = bisectIntersect(fn1, fn2, xs[i], xs[i + 1]);
+      if (z !== null) {
+        try {
+          const y = fn1(z);
+          if (isFinite(y) && !isDuplicate(z, y)) {
+            points.push({ x: z, y, kind: 'intersect', label: `(${fmt(z)}, ${fmt(y)})`, color: '#aaaaaa' });
+          }
+        } catch {}
+      }
+    }
+  }
+
+  return points;
+}
+
+function bisectIntersect(fn1: (x: number) => number, fn2: (x: number) => number, a: number, b: number, iters = 40): number | null {
+  try {
+    let fa = fn1(a) - fn2(a), fb = fn1(b) - fn2(b);
+    if (!isFinite(fa) || !isFinite(fb) || fa * fb > 0) return null;
+    for (let i = 0; i < iters; i++) {
+      const m = (a + b) / 2;
+      const fm = fn1(m) - fn2(m);
+      if (!isFinite(fm)) return null;
+      if (Math.abs(fm) < 1e-12 || b - a < 1e-12) return m;
+      if (fa * fm <= 0) { b = m; fb = fm; } else { a = m; fa = fm; }
+    }
+    return (a + b) / 2;
+  } catch { return null; }
 }

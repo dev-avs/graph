@@ -5,9 +5,25 @@ const BLOCKED = new Set([
   'history', 'navigator', 'localStorage', 'sessionStorage', 'indexedDB',
 ]);
 
+const REVERSE_SUPER: Record<string, string> = {
+  '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+  '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+  '⁺': '+', '⁻': '-', '⁽': '(', '⁾': ')', '⋅': '.',
+  'ᵃ': 'a', 'ᵇ': 'b', 'ᶜ': 'c', 'ᵈ': 'd', 'ᵉ': 'e', 'ᶠ': 'f', 'ᵍ': 'g', 'ʰ': 'h', 'ⁱ': 'i',
+  'ʲ': 'j', 'ᵏ': 'k', 'ˡ': 'l', 'ᵐ': 'm', 'ⁿ': 'n', 'ᵒ': 'o', 'ᵖ': 'p', 'ʳ': 'r', 'ˢ': 's', 'ᵗ': 't',
+  'ᵘ': 'u', 'ᵛ': 'v', 'ʷ': 'w', 'ˣ': 'x', 'ʸ': 'y', 'ᶻ': 'z', '⁼': '='
+};
+
 export function compile(rawExpr: string): (x: number) => number {
   let expr = rawExpr.trim();
   if (!expr) throw new Error('empty expression');
+
+  // decode superscripts to standard syntax
+  const superRegex = /([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁽⁾⋅ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ⁼]+)/g;
+  expr = expr.replace(superRegex, (match) => {
+    const decoded = [...match].map(c => REVERSE_SUPER[c] || c).join('');
+    return `**(${decoded})`;
+  });
 
   // strip y= or f(x)=
   expr = expr.replace(/^[yf]\s*(?:\([^)]*\))?\s*=\s*/i, '');

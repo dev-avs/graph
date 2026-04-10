@@ -157,15 +157,44 @@ function PickerPopover({ color, pos, theme, onChange, onClose }: PickerPopoverPr
   );
 }
 
-export default function EquationItem({ eq, theme, onChange, onToggleVisible, onDelete, onColorChange, autoFocus, onEnter }: Props) {
+const SUPER_MAP: Record<string, string> = {
+  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+  '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+  '+': '⁺', '-': '⁻', '(': '⁽', ')': '⁾', '.': '⋅',
+  'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ',
+  'j': 'ʲ', 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ',
+  'u': 'ᵘ', 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '=': '⁼'
+};
+
+function formatExpr(val: string): string {
+  let out = val;
+  // Parenthesized exponents: ^( ... ) -> strips parens, converts inner
+  out = out.replace(/\^\(([^)]*)\)/g, (_, inner) => {
+    return [...inner].map(c => SUPER_MAP[c.toLowerCase()] ? (c === c.toLowerCase() ? SUPER_MAP[c] : SUPER_MAP[c.toLowerCase()]) : c).join('');
+  });
+  // Auto-promote digits directly following a superscript digit
+  out = out.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)([0-9]+)/g, (_, supers, normals) => {
+    return supers + [...normals].map(d => SUPER_MAP[d]).join('');
+  });
+  // Single digit/letter: ^2, ^x
+  out = out.replace(/\^([0-9xny])/ig, (_, match) => {
+    const l = match.toLowerCase();
+    return SUPER_MAP[l] || match;
+  });
+
+  return out;
+}
+
+const EquationItem = React.memo(({ eq, theme, onChange, onToggleVisible, onDelete, onColorChange, autoFocus, onEnter }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const swatchRef = useRef<HTMLButtonElement>(null);
   const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null);
   const [hovered, setHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(() => !eq.expr || !!autoFocus);
 
   useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
-  }, [autoFocus]);
+    if (isEditing) inputRef.current?.focus();
+  }, [isEditing]);
 
   const openPicker = () => {
     if (swatchRef.current) {
@@ -219,24 +248,41 @@ export default function EquationItem({ eq, theme, onChange, onToggleVisible, onD
         />
 
         {/* Expression input */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <input
-            ref={inputRef}
-            value={eq.expr}
-            onChange={e => onChange(eq.id, e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') onEnter?.(); }}
-            placeholder="e.g. sin(x), x^2"
-            style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: eq.error ? '#f38ba8' : eq.visible ? theme.text : theme.overlay,
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 13,
-              caretColor: eq.color,
-            }}
-          />
+        <div style={{ flex: 1, minWidth: 0, paddingRight: 6 }}>
+          {!isEditing && eq.expr.includes('/') ? (
+           <div 
+             style={{ 
+               padding: '4px 0', 
+               cursor: 'text', 
+               color: eq.error ? '#f38ba8' : eq.visible ? theme.text : theme.overlay, 
+               fontSize: 14, 
+               fontFamily: "'JetBrains Mono', monospace" 
+             }}
+             onClick={() => setIsEditing(true)}
+           >
+             <MathDisplay expr={eq.expr} color={eq.color} />
+           </div>
+          ) : (
+            <input
+              ref={inputRef}
+              value={eq.expr}
+              onBlur={() => setIsEditing(false)}
+              onChange={e => onChange(eq.id, formatExpr(e.target.value))}
+              onKeyDown={e => { if (e.key === 'Enter') onEnter?.(); }}
+              placeholder="e.g. sin(x), x²"
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: eq.error ? '#f38ba8' : eq.visible ? theme.text : theme.overlay,
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 13,
+                caretColor: eq.color,
+                height: 28,
+              }}
+            />
+          )}
           {eq.error && (
             <div style={{
               color: '#f38ba8',
@@ -317,4 +363,67 @@ export default function EquationItem({ eq, theme, onChange, onToggleVisible, onD
       )}
     </div>
   );
+});
+
+export default EquationItem;
+
+function MathDisplay({ expr, color }: { expr: string; color: string }) {
+  if (!expr) return null;
+  expr = expr.trim();
+  
+  let depth = 0;
+  for (let i = 0; i < expr.length; i++) {
+    const c = expr[i];
+    if (c === '(' || c === '⁽') depth++;
+    else if (c === ')' || c === '⁾') depth--;
+    else if (depth === 0) {
+      if ((c === '+' || c === '-') && i > 0) {
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <MathDisplay expr={expr.slice(0, i)} color={color} />
+            <span>{c}</span>
+            <MathDisplay expr={expr.slice(i + 1)} color={color} />
+          </span>
+        );
+      }
+    }
+  }
+
+  depth = 0;
+  for (let i = 0; i < expr.length; i++) {
+    const c = expr[i];
+    if (c === '(' || c === '⁽') depth++;
+    else if (c === ')' || c === '⁾') depth--;
+    else if (depth === 0 && c === '/') {
+      const num = expr.slice(0, i).trim();
+      const den = expr.slice(i + 1).trim();
+      const stripParens = (s: string) => {
+        let str = s;
+        while (str.startsWith('(') && str.endsWith(')')) {
+          let d = 0, ok = true;
+          for(let j=0; j<str.length-1; j++){
+            if(str[j]==='(') d++;
+            if(str[j]===')') d--;
+            if(d===0) { ok=false; break; }
+          }
+          if(ok) str = str.slice(1, -1).trim();
+          else break;
+        }
+        return str;
+      };
+      // For single visual element denominator, usually you want no parens on the top either.
+      return (
+        <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle', margin: '0 4px', lineHeight: 1.1 }}>
+          <span style={{ borderBottom: `1.5px solid ${color}`, padding: '0 4px' }}>
+            <MathDisplay expr={stripParens(num)} color={color} />
+          </span>
+          <span style={{ padding: '0 4px', marginTop: '1px' }}>
+            <MathDisplay expr={stripParens(den)} color={color} />
+          </span>
+        </span>
+      );
+    }
+  }
+
+  return <span>{expr}</span>;
 }

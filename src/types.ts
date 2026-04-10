@@ -13,12 +13,12 @@ export interface View {
   scale: number; // pixels per unit
 }
 
-export type ThemeId = 'mocha' | 'latte' | 'nord' | 'dracula';
+export type ThemeId = 'obsidian' | 'vercel_light' | 'vercel_dark' | 'mocha' | 'latte' | 'nord' | 'dracula' | 'sakura' | 'sakuradark';
 
 export interface KeyPoint {
   x: number;
   y: number;
-  kind: 'zero' | 'yint' | 'max' | 'min';
+  kind: 'zero' | 'yint' | 'max' | 'min' | 'intersect';
   label: string;
   color: string;
 }
