@@ -7,12 +7,8 @@ interface Props {
   theme: ThemeVars;
   themeId: ThemeId;
   showMarkers: boolean;
-  showGrid: boolean;
-  thickLines: boolean;
   onThemeChange: (id: ThemeId) => void;
   onMarkersChange: (v: boolean) => void;
-  onGridChange: (v: boolean) => void;
-  onThickLinesChange: (v: boolean) => void;
 }
 
 const THEME_GROUPS: { label: string; ids: ThemeId[] }[] = [
@@ -280,7 +276,7 @@ const ThemeOption = React.memo(function ThemeOption({ t, active, theme, isLast, 
   );
 });
 
-export default function Settings({ theme, themeId, showMarkers, showGrid, thickLines, onThemeChange, onMarkersChange, onGridChange, onThickLinesChange }: Props) {
+export default function Settings({ theme, themeId, showMarkers, onThemeChange, onMarkersChange }: Props) {
   const sectionLabel = useMemo<React.CSSProperties>(() => ({
     fontSize: 10,
     fontWeight: 700,
@@ -308,28 +304,40 @@ export default function Settings({ theme, themeId, showMarkers, showGrid, thickL
 
       <div>
         <div style={sectionLabel}>Graph Options</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <ToggleOption
-            label="Key Point Markers"
-            desc="Zeros, intercepts, extrema"
-            value={showMarkers}
-            onChange={onMarkersChange}
-            theme={theme}
-          />
-          <ToggleOption
-            label="Show Grid"
-            desc="Display background grid"
-            value={showGrid}
-            onChange={onGridChange}
-            theme={theme}
-          />
-          <ToggleOption
-            label="Thick Lines"
-            desc="Bolder function curves"
-            value={thickLines}
-            onChange={onThickLinesChange}
-            theme={theme}
-          />
+                <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 12px',
+          background: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: 9,
+        }}>
+          <div>
+            <div style={{ color: theme.text, fontSize: 13, fontWeight: 500 }}>Key Point Markers</div>
+            <div style={{ color: theme.overlay, fontSize: 11, marginTop: 2 }}>
+              Zeros, intercepts, extrema
+            </div>
+          </div>
+          <button
+            onClick={handleMarkersChange}
+            style={{
+              width: 44, height: 24, borderRadius: 12,
+              background: showMarkers ? theme.accent : theme.surface2,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              position: 'relative',
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              top: 3,
+              left: showMarkers ? 23 : 3,
+              width: 18, height: 18,
+              borderRadius: '50%',
+              background: 'white',
+              transition: 'left 0.2s',
+            }} />
+          </button>
         </div>
       </div>
 
