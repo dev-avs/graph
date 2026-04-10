@@ -352,9 +352,9 @@ export default function GraphCanvas({ equations, view, onViewChange, theme, show
     : { bg: 'rgba(255,255,255,0.7)', border: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.6)' };
 
   const zoomBtns = [
-    { label: '+', title: 'Zoom in', action: () => zoom(1.4) },
-    { label: '⊙', title: 'Reset view', action: reset },
-    { label: '−', title: 'Zoom out', action: () => zoom(1 / 1.4) },
+    { label: '+', title: 'Zoom in', onClick: () => zoom(1.4) },
+    { label: '⊙', title: 'Reset view', onClick: reset },
+    { label: '−', title: 'Zoom out', onClick: () => zoom(1 / 1.4) },
   ];
 
   return (
